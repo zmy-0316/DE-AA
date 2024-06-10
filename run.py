@@ -5,7 +5,7 @@ parser = argparse.ArgumentParser(description='Model Controller')
 parser.add_argument('--dataset', default='WebNLG_star', type=str)  #['NYT','NYT_star','WebNLG','WebNLG_star']
 parser.add_argument('--cuda_id', default="0", type=str)
 parser.add_argument('--train', default="train", type=str)
-parser.add_argument('--batch_size', default=6, type=int)   #NYT=12,NYT_star=12,WebNLG/WebNLG_star=8; #新NYT_star=12，1e-5,webnlg=8,3e-5
+parser.add_argument('--batch_size', default=6, type=int)   #NYT=12,NYT_star=12,WebNLG/WebNLG_star=8; 
 parser.add_argument('--test_batch_size', default=1, type=int)
 parser.add_argument('--learning_rate', default=3e-5, type=float)  #1e-5=NYT/NYT_star;     WebNLG/webnlg_star=5e-5, 5e-5
 parser.add_argument('--num_train_epochs', default=50, type=int)
