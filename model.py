@@ -116,7 +116,7 @@ class AxialAttention(nn.Module):
 class BiAxialAttention(nn.Module):
     def __init__(self, num_head, dim):
         super(BiAxialAttention, self).__init__()
-        self.attn1 = AxialAttention(                              #调用AxialAttention函数
+        self.attn1 = AxialAttention(                          
             dim=dim,  # embedding dimension
             dim_index=-1,  # where is the embedding dimension
             heads=num_head,  # number of heads for multi-head attention
@@ -140,54 +140,32 @@ class BiAxialAttention(nn.Module):
 
 class TIEB(BertPreTrainedModel):
     def __init__(self, config):
-        super(TIEB, self).__init__(config)  #子类的构造函数中调用父类的构造函数，以便完成对父类属性和方法的继承，以及执行父类所需的初始化操作。
+        super(TIEB, self).__init__(config)  
         self.bert=BertModel(config=config)
-        #参数 config.fix_bert_embeddings 可能是用来控制是否固定BERT模型的词嵌入参数的一个标志
+        
         if config.fix_bert_embeddings:
-            self.bert.embeddings.word_embeddings.weight.requires_grad = False  #那么意味着这些参数在反向传播时会计算梯度，并且在参数更新时会被修改。相反，如果返回False，则意味着这些参数在反向传播时不会计算梯度，通常是因为它们被固定（即不可训练）
-            self.bert.embeddings.position_embeddings.weight.requires_grad = False   #位置嵌入是否需要计算梯度
-            self.bert.embeddings.token_type_embeddings.weight.requires_grad = False   #...
+            self.bert.embeddings.word_embeddings.weight.requires_grad = False  
+            self.bert.embeddings.position_embeddings.weight.requires_grad = False 
+            self.bert.embeddings.token_type_embeddings.weight.requires_grad = False   
 
         #self.dropout = nn.Dropout(config.hidden_dropout_prob)
 
-        self.dropout = nn.Dropout(config.dropout_prob)  # 用于防止过拟合
+        self.dropout = nn.Dropout(config.dropout_prob)  
         self.dropout_2 = nn.Dropout(config.entity_pair_dropout)
-        self.activation = nn.Tanh()  # 激活函数
+        self.activation = nn.Tanh() 
         self.AxialAttention=BiAxialAttention(2,config.hidden_size)
         self.W = nn.Linear(3 * config.hidden_size, config.hidden_size)
         #self.relation_matrix = nn.Linear(config.hidden_size * 3, config.hidden_size)
-        #self.projection_matrix = nn.Linear(config.hidden_size * 2, config.hidden_size)  # 将输入的特征向量进行线性变换，以增加特征的维度
+        #self.projection_matrix = nn.Linear(config.hidden_size * 2, config.hidden_size)  
         self.Cr = nn.Linear(config.hidden_size * 3, config.num_p * config.num_label)
         torch.nn.init.orthogonal_(self.Cr.weight, gain=1)
         #add
         self.FNN=nn.Linear(config.hidden_size * 2,config.hidden_size)
         self.H=nn.Linear(config.hidden_size * 2,config.hidden_size )
         self.FNN_3=nn.Linear(config.hidden_size*2,config.num_p * config.num_label)
-    '''
-    def rutn(self,x,y):
-        xmat = x
-        x, y = torch.broadcast_tensors(x[:, :, None], y[:, None, :])  #[b,l,h]转换成[b,l,l,h]
-        max_len = xmat.shape[1]  # seq_len
-        xmat_t = xmat.transpose(1, 2)  # 行列转置  [batch_size,embedding_size,seq_len]
-        batch_size = xmat.shape[0]
-        context = torch.ones_like(x).to('cuda')  # 生成与x形状相同、元素全为1的张量[b,l,l,h]
-        for i in range(max_len):
-            diag = x.diagonal(dim1=1, dim2=2, offset=-i)  # 用于返回对角线元素
-            xmat_t = torch.max(xmat_t[:, :, :max_len - i], diag)
-            bb = [[b] for b in range(batch_size)]
-            linexup = [[j for j in range(max_len - i)] ]
-            lineyup = [[j + i for j in range(max_len - i)] ]
-            linexdown = [[j + i for j in range(max_len - i)] ]
-            lineydown = [[j for j in range(max_len - i)] ]
-            context[bb, linexup, lineyup, :] = xmat_t.permute(0, 2, 1)
-            context[bb, linexdown, lineydown, :] = xmat_t.permute(0, 2, 1)
-        #这个迭代不改变context的结构，[b,l,l,h]
-        t = torch.cat([x, y, context], dim=-1)  # [b,l,l,h*3]
-        t = self.W(t)  #[b,l,l,h]
-        return t
-        '''
+
     def forward(self, token_ids, mask_token_ids):
-        embed=self.get_embed(token_ids, mask_token_ids)    #调用了get_embed函数，tensor(batch_size,seq_len,embedding_len)
+        embed=self.get_embed(token_ids, mask_token_ids)  
         batch_size=embed.shape[0]
         seq_len = embed.shape[1]  # seq_len
         #add
@@ -202,7 +180,7 @@ class TIEB(BertPreTrainedModel):
 
         #add
 
-        distance = torch.ones_like(entity_pairs).to('cuda')        #ablation1
+        distance = torch.ones_like(entity_pairs).to('cuda')       
         for i in range(1, seq_len):
             for j in range(1, seq_len):
                 distance[:, i, j, :] = math.sqrt(((i - j + 1e-2) / seq_len) ** 2)
@@ -211,30 +189,24 @@ class TIEB(BertPreTrainedModel):
         
 
 
-        entity_pairs = self.dropout_2(entity_pairs)         #ablation1
+        entity_pairs = self.dropout_2(entity_pairs)        
         entity_pairs = self.activation(entity_pairs)
 
         #add
-        entity_pairs=self.FNN(entity_pairs)        #ablation1      ablation2更改了输出维度和名称
+        entity_pairs=self.FNN(entity_pairs)       
         
         #注释掉
         #entity_pairs = entity_pairs.reshape(batch_size, seq_len, seq_len, bert_dim)  #[batch_size, seq_len , seq_len, bert_dim(768)]
-        output = self.AxialAttention(entity_pairs)  ##[batch_size, seq_len , seq_len, bert_dim(768)*3]  #ablation2没改
-        table = self.Cr(output)  #----config.num_p * config.num_label              #ablation2  没改
-
+        output = self.AxialAttention(entity_pairs)  ##[batch_size, seq_len , seq_len, bert_dim(768)*3] 
+        table = self.Cr(output)  #----config.num_p * config.num_label           
         #table=self.FNN_3(t)
         return table.reshape([batch_size,seq_len,seq_len,self.config.num_p,self.config.num_label])
-        #reshape()函数用于在不更改数据的情况下为数组赋予新形状
+      
 
     def get_embed(self,token_ids, mask_token_ids):
         bert_out = self.bert(input_ids=token_ids.long(), attention_mask=mask_token_ids.long())
         embed=bert_out[0]
-        embed=self.dropout(embed)   #最大池化
+        embed=self.dropout(embed)   
         return embed
 
-    '''
-            head_representation = embed.unsqueeze(2).expand(batch_size, seq_len, seq_len, bert_dim).reshape(batch_size, seq_len * seq_len, bert_dim) #unsqueeze增加一个第三维度，然后expang将第三维度扩展l倍，再重构形状[b,seq*seq,h]
-            tail_representation = embed.repeat(1, seq_len, 1)# 相当于把第二维度复制l倍 [b,seq*seq,h]
-            entity_pairs = torch.cat([head_representation, tail_representation], dim=-1)# [batch_size, seq_len * seq_len, bert_dim(768)*2]
-            entity_pairs = self.projection_matrix(entity_pairs)  # [batch_size, seq_len * seq_len, bert_dim(768)]
-            '''
+    
