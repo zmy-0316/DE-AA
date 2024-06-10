@@ -74,11 +74,11 @@ def tuple_mat_padding(inputs,dim=1, length=None, padding=0):
     return np.array(outputs)
 
 def sequence_padding(inputs,dim=0, length=None, padding=0):
-    if not type(inputs[0]) is np.ndarray:      #进行了类型检查，如果输入不是NumPy数组，则将其转换为NumPy数组
+    if not type(inputs[0]) is np.ndarray:      
         inputs = [np.array(i) for i in inputs]
 
     if length is None:
-        length = max([x.shape[dim] for x in inputs])#列表推导式 [x.shape[dim] for x in inputs] 构建了一个包含了所有输入数据在给定维度上长度的列表
+        length = max([x.shape[dim] for x in inputs])
     pad_width = [(0, 0) for _ in np.shape(inputs[0])]
     outputs = []
     for x in inputs:
@@ -99,29 +99,29 @@ class DataGenerator(object):
     def __init__(self, data, batch_size=32, buffer_size=None):
         self.data = data
         self.batch_size = batch_size
-        if hasattr(self.data, '__len__'):         #hasattr()是一个Python内置函数，用于检查一个对象是否具有指定的属性或方法。
-            self.steps = len(self.data) // self.batch_size      #总步数:数据集样本总数/批次
+        if hasattr(self.data, '__len__'):       
+            self.steps = len(self.data) // self.batch_size      
             if len(self.data) % self.batch_size != 0:
-                self.steps += 1              #不整除，步数加一
+                self.steps += 1           
         else:
             self.steps = None
         self.buffer_size = buffer_size or batch_size * 1000
-        #如果buffer_size为真（即不为0、空、False等），则self.buffer_size的值为buffer_size；否则，self.buffer_size的值为batch_size * 1000
+  
 
     def __len__(self):
         return self.steps
 
     def sample(self, random=False):
         if random:
-            if self.steps is None:           #有数据则执行
+            if self.steps is None:     
                 def generator():
-                    caches, isfull = [], False        #caches-----栈
+                    caches, isfull = [], False       
                     for d in self.data:
                         caches.append(d)
                         if isfull:
-                            i = np.random.randint(len(caches))     #np.random.randint()是NumPy库中用于生成随机整数的函数
+                            i = np.random.randint(len(caches))   
                             yield caches.pop(i)
-                        elif len(caches) == self.buffer_size:    #当栈中样本的数量等于buffer_size
+                        elif len(caches) == self.buffer_size:   
                             isfull = True
                     while caches:
                         i = np.random.randint(len(caches))
@@ -134,14 +134,14 @@ class DataGenerator(object):
                     for i in indices:
                         yield self.data[i]
 
-            data = generator()   #过调用 generator() 函数获得了一个生成器对象 data。
+            data = generator() 
         else:
             data = iter(self.data)
 
-        d_current = next(data)  #通过调用 next(data) 方法，从生成器中获取了第一个值，并赋给了d_current
-        for d_next in data:         #接着使用 for 循环遍历剩余的生成器元素，每次迭代将当前元素赋给 d_next
-            yield False, d_current    #返回一个值为 (False, d_current)的元组，注意：第一次返回的是上步中的d_current
-            d_current = d_next       #在每次迭代结束后，将 d_next 的值赋给 d_current，作为下一次 yield 语句产生的结果之一。
+        d_current = next(data)  
+        for d_next in data:         
+            yield False, d_current    
+            d_current = d_next      
 
         yield True, d_current
 
