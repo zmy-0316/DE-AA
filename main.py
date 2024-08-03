@@ -20,33 +20,33 @@ def search(pattern, sequence):
 
 def judge(ex):
     for s,_,o in ex["triple_list"]:   
-        if s=='' or o=='' or s not in ex["text"] or o not in ex["text"]:  
+        if s == '' or o == '' or s not in ex["text"] or o not in ex["text"]:  
             return False
     return True
 
 
 class data_generator(DataGenerator):
-    def __init__(self,args,train_data, tokenizer,predicate_map,label_map,batch_size,random=False,is_train=True):
-        super(data_generator,self).__init__(train_data,batch_size) 
-        self.max_len=args.max_len
-        self.tokenizer=tokenizer
-        self.predicate2id,self.id2predicate=predicate_map
-        self.label2id,self.id2label=label_map
-        self.random=random
-        self.is_train=is_train
+    def __init__(self, args, train_data, tokenizer, predicate_map, label_map, batch_size, random = False, is_train = True):
+        super(data_generator, self).__init__(train_data,batch_size) 
+        self.max_len = args.max_len
+        self.tokenizer = tokenizer
+        self.predicate2id, self.id2predicate = predicate_map
+        self.label2id, self.id2label = label_map
+        self.random = random
+        self.is_train = is_train
 
     def __iter__(self):
         batch_token_ids, batch_mask = [], []
-        batch_label=[]
-        batch_mask_label=[]
-        batch_ex=[]
+        batch_label = []
+        batch_mask_label = []
+        batch_ex = []
         for is_end, d in self.sample(self.random):      
 
 
-            if judge(d)==False:     
+            if judge(d) == False:     
                 continue
             token_ids, _ ,mask = self.tokenizer.encode(
-                d['text'], max_length=self.max_len
+                d['text'], max_length = self.max_len
             )           
 
             if self.is_train:
@@ -66,12 +66,12 @@ class data_generator(DataGenerator):
 
 
                 if spoes:
-                    label=np.zeros([len(token_ids), len(token_ids),len(self.id2predicate)]) #LLR           
+                    label = np.zeros([len(token_ids), len(token_ids),len(self.id2predicate)]) #LLR           
                 
                     for s in spoes:    
-                        s1,s2=s  
+                        s1,s2 = s  
                         for o1,o2,p in spoes[s]:
-                            if s1==s2 and o1==o2:
+                            if s1 == s2 and o1 == o2:
                                 label[s1,o1,p]=self.label2id["S-S"]    
                             elif s1!=s2 and o1==o2:
                                 label[s1,o1,p]=self.label2id["MB-SB"]
