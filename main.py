@@ -66,7 +66,7 @@ class data_generator(DataGenerator):
 
 
                 if spoes:
-                    label=np.zeros([len(token_ids), len(token_ids),len(self.id2predicate)]) #LLR           #建立|R|个表格
+                    label=np.zeros([len(token_ids), len(token_ids),len(self.id2predicate)]) #LLR           
                 
                     for s in spoes:    
                         s1,s2=s  
@@ -109,7 +109,7 @@ class data_generator(DataGenerator):
                         batch_ex=[]
 
             else:
-                #test: 不需要 label and label_mask
+                
                 for a, b in zip([batch_token_ids, batch_mask, batch_ex],
                                 [token_ids, mask, d]):
                     a.append(b)
@@ -149,7 +149,7 @@ def train(args):
         id2label[str(i)]=l
         label2id[l]=i
 
-    #加载数据集
+    
     train_data = json.load(open(train_path,encoding='utf-8'))
     valid_data = json.load(open(dev_path,encoding='utf-8'))
     test_data = json.load(open(test_path,encoding='utf-8'))
@@ -250,7 +250,7 @@ def train(args):
             with open(test_log_path, "a", encoding="utf-8") as f:
                 print("epoch:%d\tt_f1:%f\tt_precision:%f\tt_recall:%f\tt_best_f1:%f\t" % (
                     int(epoch), t_f1, t_precision, t_recall, t_best_f1), file=f)#
-                    
+        '''         
         if f1 > best_f1:
             # Save model checkpoint
             best_f1 = f1
@@ -262,7 +262,7 @@ def train(args):
                 print('Epoch %05d: early stopping' % (epoch + 1))
                 break
 
-        epoch_loss = epoch_loss / dataloader.__len__()   #损失计算
+        epoch_loss = epoch_loss / dataloader.__len__()   
 
         with open(log_path, "a", encoding="utf-8") as f:
             print("epoch:%d\tloss:%f\tf1:%f\tprecision:%f\trecall:%f\tbest_f1:%f" % (
