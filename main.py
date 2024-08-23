@@ -25,7 +25,7 @@ def judge(ex):
     return True
 
 
-class data_generator(DataGenerator):
+class Data_generator(DataGenerator):
     def __init__(self, args, train_data, tokenizer, predicate_map, label_map, batch_size, random = False, is_train = True):
         super(data_generator, self).__init__(train_data,batch_size) 
         self.max_len = args.max_len
