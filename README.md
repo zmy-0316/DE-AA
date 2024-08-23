@@ -3,7 +3,7 @@
 *基于词对距离嵌入和轴向注意力机制的实体关系联合抽取模型*
 
 ### 模型整体框架图
-<img width="954" alt="image" src="https://github.com/user-attachments/assets/5d083359-8e5e-47bd-a8e3-65acf395a189">
+<img width="954" alt="image" src="https://github.com/user-attachments/assets/5d083359-8e5e-47bd-a8e3-65acf395a189"><rb>
 ### 表格填充法对应标签和标注示例
 <img width="464" alt="image" src="https://github.com/user-attachments/assets/87dd07a2-3728-4005-9169-3354d36ebc7f">
 
