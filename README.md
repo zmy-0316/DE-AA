@@ -1,4 +1,5 @@
 Joint Extraction of Entities and Relations based on Word-Pair Distance Embedding and Axial Attention Mechanism
+
 基于此对距离嵌入和轴向注意力机制的实体关系联合抽取模型
 
 running：run.py 
